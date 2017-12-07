@@ -138,7 +138,7 @@
     },
     "F5_Ext_Untrusted_IP": {
       "type": "string",
-      "defaultValue": "192.168.0.5",
+      "defaultValue": "192.168.0.7",
       "metadata": {
         "description": "IP address for F5_Ext_Untrusted_IP (For UDR Next Hop)."
       }
@@ -187,6 +187,7 @@
     },
     "JumpBox_Availability_SetName": {
       "type": "string",
+      "defaultValue":  "JumpBox_AS",
       "minLength": 1
     },
     "vdssstorageType": {
@@ -202,6 +203,7 @@
     },
     "JumpBoxName": {
       "type": "string",
+      "defaultValue":  "JumpBox",
       "minLength": 1
     },
     "JumpBoxAdminUserName": {
@@ -220,6 +222,20 @@
         "2012-R2-Datacenter",
         "Windows-Server-Technical-Preview"
       ]
+    },
+    "JumpBoxLinuxName": {
+      "type": "string",
+      "defaultValue": "JumpBoxLinux",
+      "minLength": 1
+    },
+    "JumpBoxLinuxUbuntuOSVersion": {
+      "type": "string",
+      "defaultValue": "16.04-LTS",
+      "allowedValues": [
+        "12.04.5-LTS",
+        "14.04.2-LTS",
+        "16.04-LTS"
+      ]
     }
   },
   "variables": {
@@ -231,7 +247,15 @@
     "JumpBoxVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "JumpBoxSubnetRef": "[concat(variables('JumpBoxVnetID'), '/subnets/', parameters('Management_SubnetName'))]",
     "JumpBoxStorageAccountContainerName": "vhds",
-    "JumpBoxNicName": "[concat(parameters('JumpBoxName'), 'NetworkInterface')]"
+    "JumpBoxNicName": "[concat(parameters('JumpBoxName'), 'NetworkInterface')]",
+    "JumpBoxLinuxImagePublisher": "Canonical",
+    "JumpBoxLinuxImageOffer": "UbuntuServer",
+    "JumpBoxLinuxOSDiskName": "JumpBoxLinuxOSDisk",
+    "JumpBoxLinuxVmSize": "Standard_D2_v2",
+    "JumpBoxLinuxVnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "JumpBoxLinuxSubnetRef": "[concat(variables('JumpBoxLinuxVnetID'), '/subnets/', parameters('Management_SubnetName'))]",
+    "JumpBoxLinuxStorageAccountContainerName": "vhds",
+    "JumpBoxLinuxNicName": "[concat(parameters('JumpBoxLinuxName'), 'NetworkInterface')]"
   },
   "resources": [
     {
@@ -526,6 +550,77 @@
           "networkInterfaces": [
             {
               "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('JumpBoxNicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[variables('JumpBoxLinuxNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+      ],
+      "tags": {
+        "displayName": "JumpBoxLinuxNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('JumpBoxLinuxSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('JumpBoxLinuxName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('vdssstorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('JumpBoxLinuxNicName'))]"
+      ],
+      "tags": {
+        "displayName": "JumpBoxLinux"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('JumpBoxLinuxVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('JumpBoxLinuxName')]",
+          "adminUsername": "[parameters('JumpBoxAdminUsername')]",
+          "adminPassword": "[parameters('JumpBoxAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('JumpBoxLinuxImagePublisher')]",
+            "offer": "[variables('JumpBoxLinuxImageOffer')]",
+            "sku": "[parameters('JumpBoxLinuxUbuntuOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "JumpBoxLinuxOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('vdssstorageName')), '2016-01-01').primaryEndpoints.blob, variables('JumpBoxLinuxStorageAccountContainerName'), '/', variables('JumpBoxLinuxOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('JumpBoxLinuxNicName'))]"
             }
           ]
         }
