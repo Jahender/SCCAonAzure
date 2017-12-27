@@ -151,28 +151,28 @@
     },
     "F5_Ext_Trusted_IP": {
       "type": "string",
-      "defaultValue": "192.168.1.7",
+      "defaultValue": "192.168.1.5",
       "metadata": {
         "description": "IP address for F5_Ext_Trusted_IP (For UDR Next Hop)."
       }
     },
     "F5_Int_Trusted_IP": {
       "type": "string",
-      "defaultValue": "192.168.5.7",
+      "defaultValue": "192.168.5.5",
       "metadata": {
         "description": "IP address for F5_Int_Trusted_IP (For UDR Next Hop)."
       }
     },
     "F5_Ext_Untrusted_IP": {
       "type": "string",
-      "defaultValue": "192.168.0.5",
+      "defaultValue": "192.168.0.7",
       "metadata": {
         "description": "IP address for F5_Ext_Untrusted_IP (For UDR Next Hop)."
       }
     },
     "F5_Int_Untrusted_IP": {
       "type": "string",
-      "defaultValue": "192.168.4.5",
+      "defaultValue": "192.168.4.7",
       "metadata": {
         "description": "IP address for F5_Int_Untrusted_IP (For UDR Next Hop)."
       }
