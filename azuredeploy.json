@@ -1243,7 +1243,7 @@
           "computerName": "[parameters('IPSvmName')]",
           "adminUsername": "[parameters('VDSSJumpBoxAdminUsername')]",
           "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]",
-          "customData": "[base64(variables('IPSCustomData')]"
+          "customData": "[base64(variables('IPSCustomData'))]"
         },
         "storageProfile": {
           "imageReference": {
