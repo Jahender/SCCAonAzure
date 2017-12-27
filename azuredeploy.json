@@ -449,7 +449,8 @@
     "IPSvmStorageAccountContainerName": "vhds",
     "IPSvmUntrustedNicName": "[concat(parameters('IPS_Untrusted_NIC_Name'), 'NetworkInterface')]",
     "IPSvmTrustedNicName": "[concat(parameters('IPS_Trusted_NIC_Name'), 'NetworkInterface')]",
-    "IPSvmpipName": "IPSpip"
+    "IPSvmpipName": "IPSpip",
+    "IPSCustomData": "#cloud-config\nwrite_files:\n\n\n##################################################\n#\n# Set static routes\n#\n##################################################\n - path: /etc/network/interfaces\n   permissions: '0644'\n   owner: root:root\n   content: |\n      auto lo\n      iface lo inet loopback\n\n      auto eth0\n      iface eth0 inet dhcp\n\n      auto eth1\n      iface eth1 inet dhcp\n\n      up route add -net 172.16.0.0/12 gw 192.168.3.1\n      up route add -net 10.0.0.0/8 gw 192.168.3.1\n\nruncmd:\n  - service networking restart\n"
   },
   "resources": [
     {
@@ -632,7 +633,7 @@
           "computerName": "[parameters('MOJumpBoxLinuxName')]",
           "adminUsername": "[parameters('MOJumpBoxAdminUsername')]",
           "adminPassword": "[parameters('MOJumpBoxAdminPassword')]",
-          "customData": "I2Nsb3VkLWNvbmZpZwp3cml0ZV9maWxlczoKCiAtIHBhdGg6IC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2F6dXJlLWNsaS5saXN0CiAgIHBlcm1pc3Npb25zOiAnMDY0NCcKICAgb3duZXI6IHJvb3Q6cm9vdAogICBjb250ZW50OiB8CiAgICAgIGRlYiBbYXJjaD1hbWQ2NF0gaHR0cHM6Ly9wYWNrYWdlcy5taWNyb3NvZnQuY29tL3JlcG9zL2F6dXJlLWNsaS8gd2hlZXp5IG1haW4KcnVuY21kOgogIC0gc3VkbyBhcHQta2V5IGFkdiAtLWtleXNlcnZlciBwYWNrYWdlcy5taWNyb3NvZnQuY29tIC0tcmVjdi1rZXlzIDUyRTE2Rjg2RkVFMDRCOTc5QjA3RTI4REIwMkM0NkRGNDE3QTA4OTMKICAtIHN1ZG8gYXB0LWdldCBpbnN0YWxsIHNvZnR3YXJlLXByb3BlcnRpZXMtY29tbW9uCiAgLSBzdWRvIGFwdC1hZGQtcmVwb3NpdG9yeSAteSBwcGE6YW5zaWJsZS9hbnNpYmxlCiAgLSBzdWRvIGFwdC1nZXQgdXBkYXRlIC15CiAgLSBzdWRvIGFwdC1nZXQgaW5zdGFsbCAteSBhbnNpYmxlCiAgLSBzdWRvIGFwdC1nZXQgaW5zdGFsbCAteSBhcHQtdHJhbnNwb3J0LWh0dHBzCiAgLSBzdWRvIGFwdC1nZXQgdXBkYXRlICYmIHN1ZG8gYXB0LWdldCBpbnN0YWxsIC15IGF6dXJlLWNsaQogIC0gc3VkbyBhcHQtZ2V0IGluc3RhbGwgLXkgcHl0aG9uLXBpcAogIC0gc3VkbyBwaXAgaW5zdGFsbCBmNS1zZGsgYmlnc3VkcyBuZXRhZGRyIGRlZXBkaWZmCiAgLSBzdWRvIHBpcCBpbnN0YWxsIGFuc2libGVbYXp1cmVdCiAgLSBzdWRvIGFwdC1nZXQgaW5zdGFsbCAteSBkb2NrZXIuaW8KICAtIHN1ZG8gZG9ja2VyIHJ1biAtZCAtcCA4MDo4MCAtLW5ldD1ob3N0IC0tcmVzdGFydCB1bmxlc3Mtc3RvcHBlZCAtZSBGNURFTU9fQVBQPXdlYnNpdGUgLWUgRjVERU1PX0NPTE9SPWEwYmYzNyAtZSBGNURFTU9fTk9ERU5BTUU9J0Y1IEF6dXJlIFNDQ0EnIGNoZW4yMy9mNS1kZW1vLWFwcDpzc2wK"
+          
         },
         "storageProfile": {
           "imageReference": {
@@ -1174,6 +1175,7 @@
         "displayName": "IPSUntrustedNic"
       },
       "properties": {
+        "enableIPForwarding": true,
         "ipConfigurations": [
           {
             "name": "ipconfig1",
@@ -1185,8 +1187,7 @@
               },
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('IPSvmpipName'))]"
-              },
-              "enableIPForwarding": true
+              }
             }
           }
         ]
@@ -1204,6 +1205,7 @@
         "displayName": "IPSTrustedNic"
       },
       "properties": {
+        "enableIPForwarding": true,
         "ipConfigurations": [
           {
             "name": "ipconfig1",
@@ -1212,8 +1214,7 @@
               "privateIPAllocationMethod": "Static",
               "subnet": {
                 "id": "[variables('IPSTrustedSubnetref')]"
-              },
-              "enableIPForwarding": true
+              }
             }
           }
         ]
@@ -1241,7 +1242,8 @@
         "osProfile": {
           "computerName": "[parameters('IPSvmName')]",
           "adminUsername": "[parameters('VDSSJumpBoxAdminUsername')]",
-          "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]"
+          "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]",
+          "customData": "[base64(variables('IPSCustomData')]"
         },
         "storageProfile": {
           "imageReference": {
