@@ -1230,7 +1230,7 @@
           "fileUris": "[split(parameters('VDSSJumpBoxLinuxFileUris'), ' ')]"
         },
         "protectedSettings": {
-          "commandToExecute": "[concat('bash savevars.sh ',parameters('VDSSJumpBoxAdminUserName'),' ', parameters('VDSSJumpBoxAdminPassword'),' ',parameters('clientId'),' ',parameters('servicePrincipalSecret'),' ',parameters('tenantId'),' ', parameters('licensekey1'),' ', parameters('licensekey2'),' ', parameters('licensekey3'),' ', parameters('licensekey4'))]"
+          "commandToExecute": "[concat('bash savevars.sh ',parameters('VDSSJumpBoxAdminUserName'),' ', base64(parameters('VDSSJumpBoxAdminPassword')),' ',parameters('clientId'),' ',parameters('servicePrincipalSecret'),' ',parameters('tenantId'),' ', parameters('licensekey1'),' ', parameters('licensekey2'),' ', parameters('licensekey3'),' ', parameters('licensekey4'))]"
         }
       }
     },
