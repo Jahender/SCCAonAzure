@@ -499,6 +499,7 @@
     "VDSSJumpBoxLinuxSubnetRef": "[concat(variables('VDSSJumpBoxLinuxVnetID'), '/subnets/', parameters('Management_SubnetName'))]",
     "VDSSJumpBoxLinuxStorageAccountContainerName": "vhds",
     "VDSSJumpBoxLinuxNicName": "[concat(parameters('VDSSJumpBoxLinuxName'), 'NetworkInterface')]",
+    "VDSSJumpBoxLinuxCustomData": "#cloud-config\nwrite_files:\n\n - path: /etc/apt/sources.list.d/azure-cli.list\n   permissions: '0644'\n   owner: root:root\n   content: |\n      deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main\nruncmd:\n  - sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893\n  - sudo apt-get install software-properties-common\n  - sudo apt-add-repository -y ppa:ansible/ansible\n  - sudo apt-get update -y\n  - sudo apt-get install -y ansible\n  - sudo apt-get install -y apt-transport-https\n  - sudo apt-get update && sudo apt-get install -y azure-cli\n  - sudo apt-get install -y python-pip\n  - sudo pip install f5-sdk bigsuds netaddr deepdiff\n  - sudo pip install ansible[azure]\n  - sudo apt-get install -y docker.io\n  - sudo docker run -d -p 80:80 --net=host --restart unless-stopped -e F5DEMO_APP=website -e F5DEMO_COLOR=a0bf37 -e F5DEMO_NODENAME='F5 Azure SCCA' chen23/f5-demo-app:ssl\n  - sudo -u AZURE_USER HOME=/home/AZURE_USER bash /home/AZURE_USER/f5-azure-scca/doall.sh &> /home/AZURE_USER/output.log",
     "VDSSJumpBoxExtensionName": "SetupAutomationScript",
     "linux-VDSSJumpBox-ipName": "linux-VDSSJumpBox-ip",
     "IPSvmImagePublisher": "Canonical",
@@ -813,6 +814,14 @@
             "name": "RouteToManagement",
             "properties": {
               "addressPrefix": "[parameters('Management_SubnetPrefix')]",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "[parameters('IPS_Untrusted_IP')]"
+            }
+          },
+          {
+            "name": "RouteToInternalVips",
+            "properties": {
+              "addressPrefix": "[parameters('F5_Int_Untrusted_SubnetPrefix')]",
               "nextHopType": "VirtualAppliance",
               "nextHopIpAddress": "[parameters('IPS_Untrusted_IP')]"
             }
@@ -1187,7 +1196,7 @@
           "computerName": "[parameters('VDSSJumpBoxLinuxName')]",
           "adminUsername": "[parameters('VDSSJumpBoxAdminUsername')]",
           "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]",
-          "customData": "I2Nsb3VkLWNvbmZpZwp3cml0ZV9maWxlczoKCiAtIHBhdGg6IC9ldGMvYXB0L3NvdXJjZXMubGlzdC5kL2F6dXJlLWNsaS5saXN0CiAgIHBlcm1pc3Npb25zOiAnMDY0NCcKICAgb3duZXI6IHJvb3Q6cm9vdAogICBjb250ZW50OiB8CiAgICAgIGRlYiBbYXJjaD1hbWQ2NF0gaHR0cHM6Ly9wYWNrYWdlcy5taWNyb3NvZnQuY29tL3JlcG9zL2F6dXJlLWNsaS8gd2hlZXp5IG1haW4KcnVuY21kOgogIC0gc3VkbyBhcHQta2V5IGFkdiAtLWtleXNlcnZlciBwYWNrYWdlcy5taWNyb3NvZnQuY29tIC0tcmVjdi1rZXlzIDUyRTE2Rjg2RkVFMDRCOTc5QjA3RTI4REIwMkM0NkRGNDE3QTA4OTMKICAtIHN1ZG8gYXB0LWdldCBpbnN0YWxsIHNvZnR3YXJlLXByb3BlcnRpZXMtY29tbW9uCiAgLSBzdWRvIGFwdC1hZGQtcmVwb3NpdG9yeSAteSBwcGE6YW5zaWJsZS9hbnNpYmxlCiAgLSBzdWRvIGFwdC1nZXQgdXBkYXRlIC15CiAgLSBzdWRvIGFwdC1nZXQgaW5zdGFsbCAteSBhbnNpYmxlCiAgLSBzdWRvIGFwdC1nZXQgaW5zdGFsbCAteSBhcHQtdHJhbnNwb3J0LWh0dHBzCiAgLSBzdWRvIGFwdC1nZXQgdXBkYXRlICYmIHN1ZG8gYXB0LWdldCBpbnN0YWxsIC15IGF6dXJlLWNsaQogIC0gc3VkbyBhcHQtZ2V0IGluc3RhbGwgLXkgcHl0aG9uLXBpcAogIC0gc3VkbyBwaXAgaW5zdGFsbCBmNS1zZGsgYmlnc3VkcyBuZXRhZGRyIGRlZXBkaWZmCiAgLSBzdWRvIHBpcCBpbnN0YWxsIGFuc2libGVbYXp1cmVdCiAgLSBzdWRvIGFwdC1nZXQgaW5zdGFsbCAteSBkb2NrZXIuaW8KICAtIHN1ZG8gZG9ja2VyIHJ1biAtZCAtcCA4MDo4MCAtLW5ldD1ob3N0IC0tcmVzdGFydCB1bmxlc3Mtc3RvcHBlZCAtZSBGNURFTU9fQVBQPXdlYnNpdGUgLWUgRjVERU1PX0NPTE9SPWEwYmYzNyAtZSBGNURFTU9fTk9ERU5BTUU9J0Y1IEF6dXJlIFNDQ0EnIGNoZW4yMy9mNS1kZW1vLWFwcDpzc2wK"
+          "customData": "[base64(replace(variables('VDSSJumpBoxLinuxCustomData'),'AZURE_USER',parameters('VDSSJumpBoxAdminUsername')))]"
         },
         "storageProfile": {
           "imageReference": {
