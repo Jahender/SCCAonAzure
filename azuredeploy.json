@@ -305,7 +305,7 @@
     },
     "VDSSJumpBoxLinuxFileUris": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "https://raw.githubusercontent.com/chen23/f5-azure-scca/master/savevars.sh"
     },
     "tenantId": {
       "metadata": {
