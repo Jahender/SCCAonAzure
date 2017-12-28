@@ -513,7 +513,7 @@
     "IPSvmUntrustedNicName": "[concat(parameters('IPS_Untrusted_NIC_Name'), 'NetworkInterface')]",
     "IPSvmTrustedNicName": "[concat(parameters('IPS_Trusted_NIC_Name'), 'NetworkInterface')]",
     "IPSvmpipName": "IPSpip",
-    "IPSCustomData": "#cloud-config\nwrite_files:\n\n\n##################################################\n#\n# Set static routes\n#\n##################################################\n - path: /etc/network/interfaces\n   permissions: '0644'\n   owner: root:root\n   content: |\n      auto lo\n      iface lo inet loopback\n\n      auto eth0\n      iface eth0 inet dhcp\n\n      auto eth1\n      iface eth1 inet dhcp\n\n      up route add -net 172.16.0.0/12 gw GATEWAY_IP\n      up route add -net 10.0.0.0/8 gw GATEWAY_IP\n - path: /etc/sysctl.conf\n   permissions: '0644'\n   owner: root:root\n   content: |\n      net.ipv4.ip_forward=1\n\nruncmd:\n  - service networking restart\n  - sysctl --system\n"
+    "IPSCustomData": "#cloud-config\nwrite_files:\n\n\n##################################################\n#\n# Set static routes\n#\n##################################################\n - path: /etc/network/interfaces\n   permissions: '0644'\n   owner: root:root\n   content: |\n      auto lo\n      iface lo inet loopback\n\n      auto eth0\n      iface eth0 inet dhcp\n\n      auto eth1\n      iface eth1 inet dhcp\n\n      up route add -net 172.16.0.0/12 gw GATEWAY_IP\n      up route add -net 10.0.0.0/8 gw GATEWAY_IP\n      up route add -net 192.168.4.0/23 gw GATEWAY_IP\n - path: /etc/sysctl.conf\n   permissions: '0644'\n   owner: root:root\n   content: |\n      net.ipv4.ip_forward=1\n\nruncmd:\n  - service networking restart\n  - sysctl --system\n"
 
   },
   "resources": [
