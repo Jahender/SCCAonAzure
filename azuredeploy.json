@@ -305,7 +305,7 @@
     },
     "VDSSJumpBoxLinuxFileUris": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/f5devcentral/f5-azure-scca/master/savevars.sh"
+      "defaultValue": "https://raw.githubusercontent.com/chen23/f5-azure-scca/master/savevars.sh"
     },
     "tenantId": {
       "metadata": {
@@ -324,6 +324,38 @@
         "description": "Your Azure service principal application secret."
       },
       "type": "securestring"
+    },
+    "licenseKey1": {
+      "defaultValue": "",
+      "minLength": 1,
+      "metadata": {
+        "description": "The license token for the F5 BIG-IP VE (BYOL)."
+      },
+      "type": "string"
+    },
+    "licenseKey2": {
+      "defaultValue": "",
+      "minLength": 1,
+      "metadata": {
+        "description": "The license token for the F5 BIG-IP VE (BYOL). This field is required when deploying two or more devices."
+      },
+      "type": "string"
+    },
+    "licenseKey3": {
+      "defaultValue": "",
+      "minLength": 1,
+      "metadata": {
+        "description": "The license token for the F5 BIG-IP VE (BYOL)."
+      },
+      "type": "string"
+    },
+    "licenseKey4": {
+      "defaultValue": "",
+      "minLength": 1,
+      "metadata": {
+        "description": "The license token for the F5 BIG-IP VE (BYOL). This field is required when deploying two or more devices."
+      },
+      "type": "string"
     },
     "VDSSJumpBoxLinuxIp": {
       "type": "string",
@@ -467,6 +499,7 @@
     "VDSSJumpBoxLinuxSubnetRef": "[concat(variables('VDSSJumpBoxLinuxVnetID'), '/subnets/', parameters('Management_SubnetName'))]",
     "VDSSJumpBoxLinuxStorageAccountContainerName": "vhds",
     "VDSSJumpBoxLinuxNicName": "[concat(parameters('VDSSJumpBoxLinuxName'), 'NetworkInterface')]",
+    "VDSSJumpBoxLinuxCustomData": "#cloud-config\nwrite_files:\n\n - path: /etc/apt/sources.list.d/azure-cli.list\n   permissions: '0644'\n   owner: root:root\n   content: |\n      deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main\nruncmd:\n  - apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893\n  - apt-get install software-properties-common\n  - apt-add-repository -y ppa:ansible/ansible\n  - apt-get update -y\n  - apt-get install -y ansible\n  - apt-get install -y apt-transport-https\n  - apt-get update && apt-get install -y azure-cli\n  - apt-get install -y python-pip\n  - pip install f5-sdk bigsuds netaddr deepdiff\n  - pip install ansible[azure]\n  - apt-get install -y docker.io\n  - apt-get install -y jq\n  - pip install azure-mgmt-loganalytics\n  - docker run -d -p 80:80 --net=host --restart unless-stopped -e F5DEMO_APP=website -e F5DEMO_COLOR=a0bf37 -e F5DEMO_NODENAME='F5 Azure SCCA' chen23/f5-demo-app:ssl\n  - sudo -u AZURE_USER HOME=/home/AZURE_USER bash /home/AZURE_USER/f5-azure-scca/doall.sh &> /home/AZURE_USER/output.log\n",
     "VDSSJumpBoxExtensionName": "SetupAutomationScript",
     "linux-VDSSJumpBox-ipName": "linux-VDSSJumpBox-ip",
     "IPSvmImagePublisher": "Canonical",
@@ -480,7 +513,7 @@
     "IPSvmUntrustedNicName": "[concat(parameters('IPS_Untrusted_NIC_Name'), 'NetworkInterface')]",
     "IPSvmTrustedNicName": "[concat(parameters('IPS_Trusted_NIC_Name'), 'NetworkInterface')]",
     "IPSvmpipName": "IPSpip",
-    "IPSCustomData": "#cloud-config\nwrite_files:\n\n\n##################################################\n#\n# Set static routes\n#\n##################################################\n - path: /etc/network/interfaces\n   permissions: '0644'\n   owner: root:root\n   content: |\n      auto lo\n      iface lo inet loopback\n\n      auto eth0\n      iface eth0 inet dhcp\n\n      auto eth1\n      iface eth1 inet dhcp\n\n      up route add -net 172.16.0.0/12 gw GATEWAY_IP\n      up route add -net 10.0.0.0/8 gw GATEWAY_IP\n      up route add -net 192.168.4.0/23 gw GATEWAY_IP\n - path: /etc/sysctl.conf\n   permissions: '0644'\n   owner: root:root\n   content: |\n      net.ipv4.ip_forward=1\n\nruncmd:\n  - service networking restart\n  - sysctl --system\n"
+    "IPSCustomData": "#cloud-config\nwrite_files:\n\n\n##################################################\n#\n# Set static routes\n#\n##################################################\n - path: /etc/network/interfaces\n   permissions: '0644'\n   owner: root:root\n   content: |\n      auto lo\n      iface lo inet loopback\n\n      auto eth0\n      iface eth0 inet dhcp\n\n      auto eth1\n      iface eth1 inet dhcp\n\n      up route add -net 172.16.0.0/12 gw GATEWAY_IP\n      up route add -net 10.0.0.0/8 gw GATEWAY_IP\n      up route add -net INTERNAL_VIPS gw GATEWAY_IP\n - path: /etc/sysctl.conf\n   permissions: '0644'\n   owner: root:root\n   content: |\n      net.ipv4.ip_forward=1\n\nruncmd:\n  - service networking restart\n  - sysctl --system\n"
 
   },
   "resources": [
@@ -1162,7 +1195,8 @@
         "osProfile": {
           "computerName": "[parameters('VDSSJumpBoxLinuxName')]",
           "adminUsername": "[parameters('VDSSJumpBoxAdminUsername')]",
-          "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]"
+          "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]",
+          "customData": "[base64(replace(variables('VDSSJumpBoxLinuxCustomData'),'AZURE_USER',parameters('VDSSJumpBoxAdminUsername')))]"
         },
         "storageProfile": {
           "imageReference": {
@@ -1185,6 +1219,27 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('VDSSJumpBoxLinuxNicName'))]"
             }
           ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('VDSSJumpBoxLinuxName'),'/', variables('VDSSJumpBoxExtensionName'))]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('VDSSJumpBoxLinuxName'))]"
+      ],
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": "[split(parameters('VDSSJumpBoxLinuxFileUris'), ' ')]"
+        },
+        "protectedSettings": {
+          "commandToExecute": "[concat('bash savevars.sh ',parameters('VDSSJumpBoxAdminUserName'),' ', base64(parameters('VDSSJumpBoxAdminPassword')),' ',parameters('clientId'),' ',parameters('servicePrincipalSecret'),' ',parameters('tenantId'),' ', parameters('licensekey1'),' ', parameters('licensekey2'),' ', parameters('licensekey3'),' ', parameters('licensekey4'))]"
         }
       }
     },
@@ -1281,7 +1336,7 @@
           "computerName": "[parameters('IPSvmName')]",
           "adminUsername": "[parameters('VDSSJumpBoxAdminUsername')]",
           "adminPassword": "[parameters('VDSSJumpBoxAdminPassword')]",
-          "customData": "[base64(replace(variables('IPSCustomData'),'GATEWAY_IP',parameters('IPS_Trusted_Gateway_IP')))]"
+          "customData": "[base64(replace(replace(variables('IPSCustomData'),'GATEWAY_IP',parameters('IPS_Trusted_Gateway_IP')),'INTERNAL_VIPS',parameters('F5_Int_Untrusted_SubnetPrefix')))]"
         },
         "storageProfile": {
           "imageReference": {
@@ -1331,3 +1386,4 @@
     }
   ]
 }
+
