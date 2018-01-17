@@ -8,7 +8,8 @@ $F5_Ext_Trust_RouteTableName='F5_Ext_Trust_RouteTable'
 $IPS_Trust_RouteTableName='IPS_Trust_RouteTable'
 $Internal_Subnets_RouteTableName='Internal_Subnets_RouteTable'
 $IPSUntrustedIP='192.168.2.5'
-$F5IntUntrustedIP='192.168.4.7'
+$F5IntUntrustedIP='192.168.4.5'
+$F5IntTrustedIP='192.168.5.5'
 $IL5MissionOwnerVNetName='IL5MissionOwner1VNet'
 $IL5MissionOwnerVNetPrefix='10.0.0.0/22'
 $IL5MissionOwnerSubnet1Name='ProductionSubnet'
@@ -46,7 +47,6 @@ Add-AzureRmRouteConfig -Name $RouteToIL5MissionOwnerName -RouteTable $F5extTrust
 #Add IL5MO Route to IPS_Trust_RouteTable
 Add-AzureRmRouteConfig -Name $RouteToIL5MissionOwnerName -RouteTable $IPSTrustRouteTable  -AddressPrefix $IL5MissionOwnerVNetPrefix  -NextHopType VirtualAppliance -NextHopIpAddress $F5IntUntrustedIP | Set-AzureRmRouteTable
 
-
-
-
+#Add IL5MO Route to Internal_Subnets_RouteTable
+Add-AzureRmRouteConfig -Name $RouteToIL5MissionOwnerName -RouteTable $InternalSubnetsRouteTable  -AddressPrefix $IL5MissionOwnerVNetPrefix  -NextHopType VirtualAppliance -NextHopIpAddress $F5IntTrustedIP | Set-AzureRmRouteTable
 
