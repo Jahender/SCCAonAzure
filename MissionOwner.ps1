@@ -39,7 +39,7 @@ Set-AzureRMVirtualNetwork -VirtualNetwork $IL5vNet
 Add-AzureRmVirtualNetworkPeering -Name 'VDSStoIL5MissionOWner' -VirtualNetwork $SCCAvnet -RemoteVirtualNetworkId $IL5vNet.Id
 
 # Peer VNet2 to VNet1.
-Add-AzureRmVirtualNetworkPeering -Name 'IL5MissionOwnerToVDSS' -VirtualNetwork $IL5vNet -RemoteVirtualNetworkId $SCCAvnet.Id
+Add-AzureRmVirtualNetworkPeering -Name 'IL5MissionOwnerToVDSS' -VirtualNetwork $IL5vNet -RemoteVirtualNetworkId $SCCAvnet.Id -AllowForwardedTraffic
 
 #Add IL5MO Route to F5_Ext_Trust_RouteTable
 Add-AzureRmRouteConfig -Name $RouteToIL5MissionOwnerName -RouteTable $F5extTrustRouteTable  -AddressPrefix $IL5MissionOwnerVNetPrefix  -NextHopType VirtualAppliance -NextHopIpAddress $IPSUntrustedIP | Set-AzureRmRouteTable
